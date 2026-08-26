@@ -46,12 +46,10 @@ def to_ase(
     for idx, structure in enumerate(traj_pmg):
         atoms = adaptor.get_atoms(structure, msonable=False, velocities=structure.site_properties.get("velocities"))
 
-        if "stress" in atoms.info:
-            atoms.info["stress"] = np.array(atoms.info["stress"])
+        atoms.info['REF_energy'] = atoms.info['e_0_energy']; del atoms.info['e_0_energy']
+        atoms.info['REF_stress'] = np.array(atoms.info['stress']); del atoms.info['stress']
+        atoms.arrays['REF_forces'] = np.array(atoms.info['forces']); del atoms.info['forces']
 
-        atoms.info["REF_energy"] = frame_props[idx]['e_0_energy']
-        atoms.info["REF_stress"] = frame_props[idx]['stress']
-        atoms.arrays["REF_forces"] = frame_props[idx]['forces']
         if oxi_state_map is not None:
             atoms.arrays['REF_formal_charge'] = [oxi_state_map[symbol] for symbol in atoms.get_chemical_symbols()]
 
