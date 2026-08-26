@@ -10,15 +10,6 @@ from joblib import Memory
 memory = Memory(".cache", verbose=0)
 
 def loadfn(path: str | Path):
-    """
-    Load a file using monty serialization.
-
-    Args:
-        path (str or Path): The path to the file to load.
-
-    Returns:
-        The loaded object.
-    """
     return memory.cache(_loadfn)(path)
 
 def to_ase(
