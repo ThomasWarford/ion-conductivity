@@ -1,11 +1,25 @@
 from pathlib import Path
-from monty.serialization import loadfn
+from monty.serialization import loadfn as _loadfn
 from ase.io import Trajectory as AseTrajectory
 from pymatgen.io.ase import AseAtomsAdaptor
 from tempfile import NamedTemporaryFile
 from ase.io import write
 from sys import argv
+from joblib import Memory
 
+memory = Memory(".cache", verbose=0)
+
+def loadfn(path: str | Path):
+    """
+    Load a file using monty serialization.
+
+    Args:
+        path (str or Path): The path to the file to load.
+
+    Returns:
+        The loaded object.
+    """
+    return memory.cache(_loadfn)(path)
 
 def to_ase(
     traj_pmg,
@@ -42,7 +56,7 @@ def to_ase(
 
 
 
-        atoms.info["REF_energy"] = frame_props[idx]['energy']
+        atoms.info["REF_energy"] = frame_props[idx]['e_0_energy']
         atoms.info["REF_stress"] = frame_props[idx]['stress']
         atoms.arrays["REF_forces"] = frame_props[idx]['forces']
         if oxi_state_map is not None:
