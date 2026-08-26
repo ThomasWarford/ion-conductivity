@@ -9,4 +9,8 @@
 #SBATCH --error=logs/convert-traj_%A_%a.err
 #SBATCH --array=5-10
 
-conda run -n dft python convert.py $SLURM_ARRAY_TASK_ID
+if [ -n "$1" ]; then
+    conda run -n dft python convert.py $SLURM_ARRAY_TASK_ID "$1"
+else
+    conda run -n dft python convert.py $SLURM_ARRAY_TASK_ID
+fi

@@ -1,4 +1,5 @@
 from pathlib import Path
+import numpy as np
 from monty.serialization import loadfn as _loadfn
 from ase.io import Trajectory as AseTrajectory
 from pymatgen.io.ase import AseAtomsAdaptor
@@ -45,7 +46,8 @@ def to_ase(
     for idx, structure in enumerate(traj_pmg):
         atoms = adaptor.get_atoms(structure, msonable=False, velocities=structure.site_properties.get("velocities"))
 
-
+        if "stress" in atoms.info:
+            atoms.info["stress"] = np.array(atoms.info["stress"])
 
         atoms.info["REF_energy"] = frame_props[idx]['e_0_energy']
         atoms.info["REF_stress"] = frame_props[idx]['stress']
@@ -64,18 +66,18 @@ def to_ase(
     return ase_traj
 
 
-DATA_DIR_PATH = Path("/global/cfs/projectdirs/matgen/virkaran/MD_trajectories/BTO_full_prod_traj/")
 OXI_STATE_MAP = {"O": -2, "Ti": 4, "Ba": 2}
-_, RANK = argv
-RANK = int(RANK)
+args = argv[1:]
+RANK = int(args[0])
+DATA_DIR_PATH = Path(args[1]) if len(args) > 1 else Path("data_test")
 
 
 paths = DATA_DIR_PATH.iterdir()
 paths = sorted(paths)
 path = paths[RANK]
 
-traj_name = path.stem
+traj_name = path.stem.split('.')[0]
 traj = loadfn(path)
 ase_traj = to_ase(traj, ase_traj_file=Path("data_traj")/f"{traj_name}.traj", oxi_state_map=OXI_STATE_MAP)
-write(Path("data_xyz")/f"{traj_name}.xyz", ase_traj, format="xyz")
+write(Path("data_xyz")/f"{traj_name}.xyz", ase_traj)
 
