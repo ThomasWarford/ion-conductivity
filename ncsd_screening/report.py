@@ -6,14 +6,22 @@ Goal      - pick amorphous systems where an MLIP-vs-AIMD validation of the
             diffusion coefficients (and the harder cross-correlation / Onsager
             terms) is actually feasible.
 
-  python report.py
+  python report.py                          # every composition in the screen
+  python report.py --charge-balanced-only   # only stoichiometric ionic compounds
 
 Reads  results/screen.csv  (+ results/mp_reference.csv if present)
-Writes results/summary.md, results/shortlist_all.csv, results/shortlist_electrolyte.csv,
-       results/figs/*.png
+Writes results/summary<suffix>.md, results/shortlist_{all,electrolyte}<suffix>.csv,
+       results/figs<suffix>/*.png
+
+--charge-balanced-only keeps only compositions that some assignment of common
+oxidation states makes neutral (see charge_balance.py).  Most of the NCSD cells
+are PACKMOL packings at compositions that are not stoichiometric salts -- Br-Li
+is Br25Li75 = Li3Br, not LiBr -- and their Li mobility is metallic self-diffusion
+in a Li-rich melt, not ionic conduction.  Suffix defaults to "_cb" in that mode.
 """
 from __future__ import annotations
 
+import argparse
 import os
 
 import matplotlib
@@ -21,6 +29,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+
+from charge_balance import classify
 
 HERE = os.path.dirname(__file__)
 RES = os.path.join(HERE, "results")
@@ -62,6 +72,10 @@ def load():
     if "error" in df:
         df = df[df.error.isna() | (df.error == "")].copy()
     df["anion_class"] = df.system.map(anion_class)
+    cb = df.formula.map(classify)
+    df["cb_status"] = [v.status for v in cb]
+    df["cb_q_per_atom"] = [v.q_per_atom for v in cb]
+    df["reduced_formula"] = [v.reduced for v in cb]
     df["electrolyte_like"] = df.system.map(
         lambda s: bool((set(s.split("-")) - {"Li"}) & INSULATING_ANION))
     mp = None
@@ -90,7 +104,8 @@ def build_shortlist(li, systems):
     cv = sl.pivot_table(index="system", columns="temperature", values="block_cv")
     cv.columns = [f"blockcv_{int(c)}K" for c in cv.columns]
     meta = (sl.sort_values("temperature").groupby("system").agg(
-        formula=("formula", "last"), anion_class=("anion_class", "last"),
+        formula=("formula", "last"), reduced=("reduced_formula", "last"),
+        cb_status=("cb_status", "last"), anion_class=("anion_class", "last"),
         n_Li=("n_species", "last"), natoms=("natoms", "last"),
         n_conv_T=("converged", "sum"),
         med_prod_ps=("production_ps", "median"),
@@ -113,15 +128,71 @@ def build_shortlist(li, systems):
     return out.sort_values(dcol, ascending=False)
 
 
-def main():
-    os.makedirs(FIG, exist_ok=True)
-    df, mp = load()
+def _cb_audit(li_all, filtering):
+    """Charge-balance census over every composition in the screen."""
+    per = li_all.sort_values("temperature").groupby("system").agg(
+        formula=("formula", "last"), reduced=("reduced_formula", "last"),
+        status=("cb_status", "last"), qpa=("cb_q_per_atom", "last"),
+        anion_class=("anion_class", "last"),
+        D1000=("D_einstein_cm2s", "first"))
+    n = len(per)
+    counts = per.status.value_counts()
+    L = ["## 0. Charge balance of the cell compositions\n",
+         "The NCSD cells are PACKMOL packings at a target composition, and most of "
+         "those compositions are not stoichiometric compounds. A composition is "
+         "**balanced** here if some assignment of common oxidation states sums to "
+         "zero (`charge_balance.py`; the most electronegative element is forced "
+         "into its anion state). **no_anion** means no element present forms an "
+         "anion at all -- an alloy, not an ionic compound.\n",
+         "| status | n systems | % |", "|---|---|---|"]
+    for k in ("balanced", "unbalanced", "no_anion"):
+        c = int(counts.get(k, 0))
+        L.append(f"| {k} | {c} | {c / n:.0%} |")
+    L.append(f"| **total** | **{n}** | |")
+
+    unb = per[per.status == "unbalanced"]
+    L += ["\nThe imbalance is not marginal. `q/atom` is the smallest net formal "
+          "charge per atom any oxidation-state assignment can reach:\n",
+          "| |q|/atom | n unbalanced systems |", "|---|---|"]
+    import numpy as _np
+    q = unb.qpa.abs()
+    for lo, hi in [(0, .1), (.1, .25), (.25, .5), (.5, _np.inf)]:
+        L.append(f"| {lo:g} - {hi:g} | {int(((q >= lo) & (q < hi)).sum())} |")
+
+    worst = per[per.status != "balanced"].sort_values("D1000", ascending=False).head(12)
+    L += ["\n**The fastest Li movers are exactly the compositions that are not "
+          "compounds** -- Li-rich packings whose 'Li diffusivity' is self-diffusion "
+          "in a lithium melt. Top 12 excluded systems by D_Li(1000 K):\n",
+          "| system | formula | reduced | status | q/atom | anion class | D_Li 1000K |",
+          "|---|---|---|---|---|---|---|"]
+    for s_, r in worst.iterrows():
+        qq = "-" if r.status == "no_anion" else f"{r.qpa:+.2f}"
+        L.append(f"| {s_} | {r.formula} | {r.reduced} | {r.status} | {qq} | "
+                 f"{r.anion_class} | {r.D1000:.2e} |")
+    if filtering:
+        L += ["\nEverything below uses the "
+              f"{int(counts.get('balanced', 0))} balanced compositions only.\n"]
+    else:
+        L += ["\nEverything below uses **all** compositions, balanced or not -- "
+              "run with `--charge-balanced-only` for the filtered version.\n"]
+    return L
+
+
+def main(charge_balanced_only=False, suffix=None):
+    if suffix is None:
+        suffix = "_cb" if charge_balanced_only else ""
+    fig_dir = FIG + suffix
+    os.makedirs(fig_dir, exist_ok=True)
+    df_all, mp = load()
+    li_all = df_all[df_all.species == "Li"].copy()
+    df = df_all[df_all.cb_status == "balanced"].copy() if charge_balanced_only else df_all
     li = df[df.species == "Li"].copy()
     li["converged"] = converged(li)
     li["charge_converged"] = (li.beta_charge.between(0.8, 1.3)
                               & li.D_charge_cm2s.notna() & (li.D_charge_cm2s > 0))
 
-    L = ["# NCSD amorphous-diffusivity screen  --  convergence & magnitude\n",
+    L = ["# NCSD amorphous-diffusivity screen  --  convergence & magnitude"
+         + ("  (CHARGE-BALANCED COMPOSITIONS ONLY)\n" if charge_balanced_only else "\n"),
          f"{df.system.nunique()} compositions x 4 temperatures (1000-2500 K), "
          f"AIMD, 2 fs timestep, {li.production_ps.median():.0f} ps median production run.\n",
          "D is the 3-D Einstein self-diffusivity (MSD -> 6 D t). The MPContribs "
@@ -132,6 +203,8 @@ def main():
          "D stable to <25% across lag windows; |D(2nd half)/D(1st half) - 1| <= 0.4; "
          "D from a <=20 ps trajectory prefix already within 25% of the full-run D "
          "(t_run_converge); |energy drift| <= 1 meV/atom/ps.\n"]
+
+    L += _cb_audit(li_all, charge_balanced_only)
 
     L += ["## 1. By temperature\n",
           "| T (K) | median prod (ps) | median D_Li (cm^2/s) | D_Li 10-90% range | "
@@ -160,8 +233,8 @@ def main():
 
     sl_all = build_shortlist(li, all_cand)
     sl_el = build_shortlist(li, elec_cand)
-    sl_all.to_csv(os.path.join(RES, "shortlist_all.csv"))
-    sl_el.to_csv(os.path.join(RES, "shortlist_electrolyte.csv"))
+    sl_all.to_csv(os.path.join(RES, f"shortlist_all{suffix}.csv"))
+    sl_el.to_csv(os.path.join(RES, f"shortlist_electrolyte{suffix}.csv"))
 
     L += [f"\n## 3. Shortlist A - any chemistry, Li converged at >= 2 T  ({len(sl_all)} systems)\n",
           "Mostly Li metal / Li-alloy melts: large D, textbook convergence. "
@@ -215,20 +288,23 @@ def main():
         L += [f"\n## 7. Top picks - {name}\n",
               _fmt(top).to_markdown()]
 
-    open(os.path.join(RES, "summary.md"), "w").write("\n".join(str(x) for x in L) + "\n")
-    _figs(li, sl_all, sl_el)
-    print(f"shortlist A (any): {len(sl_all)}   shortlist B (electrolyte): {len(sl_el)}")
-    print("wrote results/summary.md, results/shortlist_*.csv, results/figs/*.png")
+    open(os.path.join(RES, f"summary{suffix}.md"), "w").write(
+        "\n".join(str(x) for x in L) + "\n")
+    _figs(li, sl_all, sl_el, fig_dir)
+    print(f"systems: {df.system.nunique()} of {df_all.system.nunique()}   "
+          f"shortlist A (any): {len(sl_all)}   shortlist B (electrolyte): {len(sl_el)}")
+    print(f"wrote results/summary{suffix}.md, results/shortlist_*{suffix}.csv, "
+          f"results/figs{suffix}/*.png")
 
 
 def _fmt(sl):
-    keep = ["formula", "anion_class", "n_Li", "n_conv_T", "charge_conv_T",
+    keep = ["formula", "reduced", "anion_class", "n_Li", "n_conv_T", "charge_conv_T",
             "min_trun_ps", "med_beta", "med_block_cv", "med_haven", "Ea_eV"]
     keep += [c for c in sl.columns if c.startswith("D_Li_")]
     return sl[keep].round(6)
 
 
-def _figs(li, sl_all, sl_el):
+def _figs(li, sl_all, sl_el, fig_dir=FIG):
     cls_order = ["metallic", "network(B/C/Si/Ge)", "pnictide", "chalcogenide",
                  "oxide", "halide"]
     cmap = dict(zip(cls_order, plt.cm.tab10(range(len(cls_order)))))
@@ -248,7 +324,7 @@ def _figs(li, sl_all, sl_el):
     axs[0].set_ylabel("D_Li  (cm$^2$/s)")
     axs[0].legend(fontsize=8, title="anion class")
     fig.suptitle("Li diffusivity vs convergence time")
-    fig.tight_layout(); fig.savefig(f"{FIG}/D_vs_tconverge.png", dpi=130); plt.close(fig)
+    fig.tight_layout(); fig.savefig(f"{fig_dir}/D_vs_tconverge.png", dpi=130); plt.close(fig)
 
     # distributions
     fig, axs = plt.subplots(1, 3, figsize=(14, 4))
@@ -265,7 +341,7 @@ def _figs(li, sl_all, sl_el):
     axs[1].axvspan(*BETA, color="green", alpha=.12)
     axs[1].set_xlabel(r"$\beta$ (late-time dlnMSD/dlnt)"); axs[1].set_title("diffusive regime")
     axs[2].set_xlabel("t_converge (ps)"); axs[2].set_title("fitted-D convergence")
-    fig.tight_layout(); fig.savefig(f"{FIG}/distributions.png", dpi=130); plt.close(fig)
+    fig.tight_layout(); fig.savefig(f"{fig_dir}/distributions.png", dpi=130); plt.close(fig)
 
     # Arrhenius of electrolyte shortlist
     sl = sl_el if len(sl_el) else sl_all
@@ -283,8 +359,15 @@ def _figs(li, sl_all, sl_el):
     ax.set_xlabel("1000 / T  (K$^{-1}$)"); ax.set_ylabel("D_Li  (cm$^2$/s)")
     ax.set_title("Arrhenius - electrolyte-chemistry shortlist")
     ax.legend(fontsize=7)
-    fig.tight_layout(); fig.savefig(f"{FIG}/arrhenius_electrolyte.png", dpi=130); plt.close(fig)
+    fig.tight_layout(); fig.savefig(f"{fig_dir}/arrhenius_electrolyte.png", dpi=130); plt.close(fig)
 
 
 if __name__ == "__main__":
-    main()
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--charge-balanced-only", action="store_true",
+                    help="keep only compositions a common-oxidation-state "
+                         "assignment makes neutral (see charge_balance.py)")
+    ap.add_argument("--suffix", default=None,
+                    help="output filename suffix (default '_cb' when filtering)")
+    a = ap.parse_args()
+    main(charge_balanced_only=a.charge_balanced_only, suffix=a.suffix)

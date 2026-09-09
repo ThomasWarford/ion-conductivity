@@ -12,15 +12,15 @@ file lands as `<name>.part` and is renamed only once complete, so an interrupted
 run never leaves something that looks finished.
 
   python fetch_ncsd.py --dry-run          # what would be fetched, and how much
-  python fetch_ncsd.py                    # the 12 MD targets, 1000-2500 K
-  python fetch_ncsd.py --systems Li-S,Li-Se --temps 1500
+  python fetch_ncsd.py                    # the MD targets, 1000-2500 K
+  python fetch_ncsd.py --systems Li-N,Li-P --temps 1500
   python fetch_ncsd.py --systems all      # the whole dataset (74 GB w/o 5000 K)
 
 Default systems come from md_targets.txt; default destination is
 $SCRATCH/data/ncsd (symlinked in this repo as ../data_ncsd).
 
 5000 K is supported but not in the default temperature list: those trajectories
-are roughly 5x larger than the others (Li-S alone is 633 MB).
+are roughly 5x larger than the others (a single system can exceed 600 MB).
 """
 from __future__ import annotations
 

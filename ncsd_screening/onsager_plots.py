@@ -1,6 +1,7 @@
 """Plots for the Onsager analysis (onsager.py output).
 
   python onsager_plots.py
+  python onsager_plots.py --charge-balanced-only   # drop non-stoichiometric cells
 
 Writes results/figs/onsager_curves_1500K.png   -- MSD_self, MSD_coll, C_dist vs lag
        results/figs/onsager_f_running.png       -- running f(t) = C_dist/MSD_self, per T
@@ -20,9 +21,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from charge_balance import classify
+
 HERE = os.path.dirname(__file__)
 RES = os.path.join(HERE, "results")
 SPECIES = "Li"                      # set by --species
+CB_ONLY = False                     # set by --charge-balanced-only
 FIG = os.path.join(RES, "figs", "li")
 TEMPS = [1000, 1500, 2000, 2500]
 TCOL = dict(zip(TEMPS, plt.cm.viridis(np.linspace(0, .82, 4))))
@@ -33,6 +37,16 @@ def load():
     df = df[df.error.fillna("") == ""].copy()
     if "species" in df:
         df = df[df.species == SPECIES].copy()
+    if CB_ONLY:
+        # Most NCSD cells are packings at compositions that are not compounds
+        # (Br-Li is Li3Br, not LiBr); their "ionic" transport is metallic
+        # self-diffusion in a Li-rich melt.  See charge_balance.py.
+        keep = df.formula.map(lambda f: classify(f).status == "balanced")
+        dropped = sorted(df.loc[~keep, "system"].unique())
+        df = df[keep].copy()
+        if dropped:
+            print(f"charge-balance filter dropped {len(dropped)} systems: "
+                  + ", ".join(dropped))
     with gzip.open(os.path.join(RES, "onsager_curves.json.gz")) as fh:
         curves = json.load(fh)
     order = (df[df.temperature == 1500].sort_values("D_self_cm2s", ascending=False)
@@ -69,7 +83,7 @@ def fig_curves(df, curves, order, T=1500):
         ax.axis("off")
     for i, sys in enumerate(order):
         ax = axs.flat[i]; ax.axis("on")
-        key = f"{sys}|{T}"
+        key = f"{sys}|{T}|{SPECIES}"
         row = df[(df.system == sys) & (df.temperature == T)]
         if key not in curves or row.empty:
             ax.set_title(sys, fontsize=8); continue
@@ -123,7 +137,7 @@ def fig_f_running(df, curves, order):
         ax.axhspan(-1, 1, color="#1baf7a", alpha=.06)
         ax.axhline(0, color="#999", lw=.6)
         for T in TEMPS:
-            key = f"{sys}|{T}"
+            key = f"{sys}|{T}|{SPECIES}"
             if key not in curves:
                 continue
             cd = curves[key]; t = np.array(cd["t"])
@@ -205,13 +219,16 @@ def summary(df, order):
 
 
 def main():
-    global SPECIES, FIG
+    global SPECIES, FIG, CB_ONLY
     import argparse
     ap = argparse.ArgumentParser()
     ap.add_argument("--species", default="Li")
+    ap.add_argument("--charge-balanced-only", action="store_true",
+                    help="keep only stoichiometric ionic compositions")
     a = ap.parse_args()
     SPECIES = a.species
-    FIG = os.path.join(RES, "figs", SPECIES.lower())
+    globals()["CB_ONLY"] = a.charge_balanced_only
+    FIG = os.path.join(RES, "figs", SPECIES.lower() + ("_cb" if a.charge_balanced_only else ""))
     os.makedirs(FIG, exist_ok=True)
     df, curves, order = load()
     for T in TEMPS:
@@ -219,7 +236,7 @@ def main():
     fig_f_running(df, curves, order)
     fig_f_vs_T(df, order)
     summary(df, order)
-    print("wrote results/figs/onsager_*.png and results/onsager_summary.md")
+    print(f"wrote {FIG}/*.png and {FIG}/summary.md")
 
 
 if __name__ == "__main__":

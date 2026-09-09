@@ -4,25 +4,75 @@
 # bucket: element symbols sorted alphabetically, hyphen separated.  This file is
 # the single source of truth -- fetch_ncsd.py reads it by default.
 #
-# NOTE: there is no `Li-O` binary in the dataset.  The Li-X binaries available
-# are Li-N, Li-P, Li-S, Li-Se, Li-Te, Br-Li, Cl-Li, I-Li plus the metals
-# (checked against a live bucket listing, 219 systems at each temperature).
-# Ga-Li-O and Li-O-Si stand in for the Li oxide.
+# EVERY system here is charge-balanced: some assignment of common oxidation
+# states makes the packed cell neutral (charge_balance.py).  That is not a given
+# -- 159 of the 219 compositions in the bucket fail it.  `Br-Li` is Br25Li75 =
+# Li3Br, `Li-S` is Li3S, and cells like those are Li-rich metallic melts whose
+# "Li conduction" is metallic self-diffusion, not ionic transport.  An earlier
+# version of this file listed seven of them; see results/summary_cb.md.
+#
+# Cells are 80-108 atoms, so the set is roughly uniform in cost.
 
-# binaries
+# --- chemical-trend series -------------------------------------------------
+# Each pair keeps every element but one and swaps that one for a same-group (or
+# same-oxidation-state) congener at the SAME stoichiometry, so the substitution
+# is the only thing that changes.  Run both members or neither.
+
+# 1. group-15 binary, N -> P            Li3N / Li3P          (both converge)
 Li-N
-Br-Li
+Li-P
+
+# 2. alkali counter-ion, Na -> K        Na2LiAlP2 / K2LiAlP2
+Al-Li-Na-P
+Al-K-Li-P
+
+# 3. chalcogen, S -> Se                 RbLiS / RbLiSe
+Li-Rb-S
+Li-Rb-Se
+
+# 4. group-15 hexafluoride, P -> As     LiPF6 / LiAsF6
+#    LiPF6 is the commercial Li-ion salt.  Neither member converges on the
+#    existing ~30 ps runs (cv 0.36/0.41, conv@0T) -- they need the extended AIMD.
+F-Li-P
+As-F-Li
+
+# 5. NASICON framework, W -> Ti         LiP3W2O12 / LiTi2P3O12
+#    LiTi2(PO4)3 is the LATP parent.  Same caveat as series 4: conv@0T both.
+Li-O-P-W
+Li-O-P-Ti
+
+# 6. group-15 thio-salt, Sb -> Bi       Li5SbS4 / Li3BiS3
+#    Stoichiometry differs (Li fraction 0.50 vs 0.43), but these are the only
+#    two systems besides Li3N/Li3P where BOTH members reach conv@3T.
+Li-S-Sb
+Bi-Li-S
+
+# --- standalone ------------------------------------------------------------
+
+# LiCl -- the molten-salt benchmark: fastest balanced halide, self-D settled by
+# 5 ps at every temperature, and real experimental transport data to check
+# against.  Its correlation factor f is not resolved.
 Cl-Li
-Li-S
-Li-Se
 
-# oxides (stand-ins for the absent Li-O binary)
-Ga-Li-O
-Li-O-Si
-
-# ternaries
+# Li3CuS2 -- the only balanced system with a second genuinely mobile cation
+# (Cu diffuses at half the Li rate), so the one place to look at cation-cation
+# cross terms rather than only Li-Li.
 Cu-Li-S
-Li-S-Sn
-Li-Se-Sn
-Li-O-Sn
-Li-P-Sn
+
+# Li6Zr2O7 -- the converging oxide.  Passes every convergence test at 1500 K
+# and above; with Li3N it is one of only two systems whose f holds its sign at
+# all four temperatures.
+Li-O-Zr
+
+# Li3NbS4 -- the fastest charge-balanced Li conductor in the whole dataset
+# (D_Li = 8.8e-5 cm2/s at 1000 K, ahead of LiCl) and the smallest cell at 80
+# atoms.  Erratic on the existing runs: it fails a different convergence test at
+# each temperature, so it is here on magnitude and needs the longer trajectories.
+Li-Nb-S
+
+# Li6SnGe2 -- CONTROL, not an electrolyte.  Balanced only through Zintl anions
+# (Li+ / Ge4- / Sn2+) and metallic; it is the single best-converging system in
+# the set (all seven tests at all four temperatures, cv 0.07).  Included as a
+# different bonding regime for a charge-aware potential, not as a transport
+# target.  Drop it if the scope is solid electrolytes only.
+Ge-Li-Sn

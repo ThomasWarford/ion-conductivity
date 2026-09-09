@@ -272,13 +272,28 @@ def main():
     ap.add_argument("--window", type=float, nargs=2, default=[0.2, 0.6])
     ap.add_argument("--species", default="all",
                     help='"all" (default) or a single element symbol, e.g. Li')
+    ap.add_argument("--systems", default="shortlist",
+                    help='"shortlist" (results/shortlist_electrolyte.csv, default), '
+                         '"shortlist_cb" (the charge-balanced one), "targets" '
+                         '(md_targets.txt), or a comma-separated list of systems')
+    ap.add_argument("--merge", action="store_true",
+                    help="merge into the existing onsager.csv / onsager_curves.json.gz "
+                         "instead of replacing them; rows for the systems being "
+                         "recomputed are dropped first")
     args = ap.parse_args()
     WINDOW = args.window
     SPECIES = args.species
 
     import pandas as pd
-    sl = pd.read_csv(os.path.join(RES, "shortlist_electrolyte.csv"))
-    systems = list(sl["system"])
+    if args.systems == "shortlist":
+        systems = list(pd.read_csv(os.path.join(RES, "shortlist_electrolyte.csv"))["system"])
+    elif args.systems == "shortlist_cb":
+        systems = list(pd.read_csv(os.path.join(RES, "shortlist_electrolyte_cb.csv"))["system"])
+    elif args.systems == "targets":
+        from fetch_ncsd import read_targets
+        systems = read_targets()
+    else:
+        systems = [x.strip() for x in args.systems.split(",") if x.strip()]
     jobs = [(s, T) for s in systems for T in TEMPS]
     print(f"{len(jobs)} (system, T) pairs on {args.procs} procs, "
           f"window {WINDOW}, species={SPECIES}", flush=True)
@@ -295,7 +310,25 @@ def main():
             if (i + 1) % 20 == 0:
                 print(f"  {i + 1}/{len(jobs)}", flush=True)
 
-    df = pd.DataFrame(rows).sort_values(["system", "temperature", "species"])
+    df = pd.DataFrame(rows)
+    if args.merge:
+        # keep everything already computed for systems we did not just rerun
+        old_csv = os.path.join(RES, "onsager.csv")
+        old_gz = os.path.join(RES, "onsager_curves.json.gz")
+        if os.path.exists(old_csv):
+            old = pd.read_csv(old_csv)
+            keep = old[~old.system.isin(systems)]
+            df = pd.concat([keep, df], ignore_index=True)
+            print(f"merged: kept {len(keep)} existing rows for "
+                  f"{keep.system.nunique()} systems, added {len(rows)} new")
+        if os.path.exists(old_gz):
+            with gzip.open(old_gz, "rt") as fh:
+                old_curves = json.load(fh)
+            old_curves = {k: v for k, v in old_curves.items()
+                          if k.split("|")[0] not in systems}
+            old_curves.update(curves)
+            curves = old_curves
+    df = df.sort_values(["system", "temperature", "species"])
     cols = ["system", "temperature", "species", "formula", "n_atoms_species",
             "production_ps", "window",
             "D_self_cm2s", "D_self_cm2s_stat", "D_coll_cm2s", "D_coll_cm2s_stat",
@@ -309,7 +342,7 @@ def main():
     df.to_csv(os.path.join(RES, "onsager.csv"), index=False)
     with gzip.open(os.path.join(RES, "onsager_curves.json.gz"), "wt") as fh:
         json.dump(curves, fh)
-    ok = df[df.error == ""]
+    ok = df[df.error.fillna("") == ""]
     print(f"wrote results/onsager.csv ({len(ok)} rows, "
           f"{ok.species.nunique()} species, {len(df) - len(ok)} errors)")
     print()
