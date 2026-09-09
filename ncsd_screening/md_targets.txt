@@ -1,0 +1,28 @@
+# Systems selected for long MLIP MD + AIMD validation of Li diffusion.
+#
+# Names are the `chemical_system` tag used by the MP amorphous_diffusivity
+# bucket: element symbols sorted alphabetically, hyphen separated.  This file is
+# the single source of truth -- fetch_ncsd.py reads it by default.
+#
+# NOTE: there is no `Li-O` binary in the dataset.  The Li-X binaries available
+# are Li-N, Li-P, Li-S, Li-Se, Li-Te, Br-Li, Cl-Li, I-Li plus the metals
+# (checked against a live bucket listing, 219 systems at each temperature).
+# Ga-Li-O and Li-O-Si stand in for the Li oxide.
+
+# binaries
+Li-N
+Br-Li
+Cl-Li
+Li-S
+Li-Se
+
+# oxides (stand-ins for the absent Li-O binary)
+Ga-Li-O
+Li-O-Si
+
+# ternaries
+Cu-Li-S
+Li-S-Sn
+Li-Se-Sn
+Li-O-Sn
+Li-P-Sn

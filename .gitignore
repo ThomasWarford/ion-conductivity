@@ -1,0 +1,27 @@
+# data (symlinks to /pscratch and /global/cfs)
+data
+data_ncsd
+data_fit/
+data_traj/
+data_xyz/
+data_test/
+!data_test/test.json.gz
+
+# caches, runs, notebooks
+joblib/
+.cache/
+logs/
+fits/
+.ipynb_checkpoints/
+.vscode/
+__pycache__/
+*.pyc
+
+# heavy derived outputs (the small text ones under results/ are tracked)
+ncsd_screening/results/figs/
+ncsd_screening/results/*.jsonl
+ncsd_screening/results/*.json
+ncsd_screening/results/*.json.gz
+ncsd_screening/results/*.html
+ncsd_screening/results/screen.csv
+ncsd_screening/*.log
