@@ -23,6 +23,11 @@
 # Each link gets its own subdirectory so link1's OUTCAR/XDATCAR history is never
 # overwritten by link2.
 #
+# vasprun.xml is kept (not nulled) -- measured ~20KB/step with the disk-hygiene
+# INCAR (LAECHG/LCHARG/LORBIT off), cheap enough to keep. Everything except CONTCAR
+# is gzip'd once vasp_gam exits successfully (~3-4x smaller); CONTCAR stays
+# uncompressed since the next link reads it directly as its POSCAR.
+#
 # Submit (module is group `vasp`-restricted, must wrap sbatch itself):
 #   N=$(wc -l < our_trajectories/runs/cases_base.txt)
 #   JOB1=$(sg vasp -c "sbatch --array=0-$((N-1)) --parsable our_trajectories/run_aimd.sbatch")
@@ -48,7 +53,6 @@ d="$base/link$LINK"
 
 mkdir -p "$d"
 cp "$base"/{INCAR,KPOINTS,POTCAR} "$d/"
-ln -sf /dev/null "$d/vasprun.xml"  # ~600KB/step, not needed -- OUTCAR/XDATCAR have the same data
 
 if [ "$LINK" -gt 1 ]; then
   prev="$base/link$((LINK-1))/CONTCAR"
@@ -62,5 +66,6 @@ echo "task $SLURM_ARRAY_TASK_ID -> $CASE link$LINK ($(date))"
 ( cd "$d"
   srun --mpi=pmi2 --cpu-bind=cores -n "$SLURM_NTASKS" vasp_gam > vasp.out 2>&1
   tail -n 5 OSZICAR
+  gzip -f $(find . -maxdepth 1 -type f ! -name CONTCAR)
 )
 echo "done $CASE link$LINK ($(date))"
