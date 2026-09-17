@@ -31,11 +31,12 @@ incar_overrides = {
     "NCORE": 32,
 }
 
-si = Structure(Lattice.cubic(5.43), ["Si"] * 2, [[0, 0, 0], [0.25, 0.25, 0.25]])
+if __name__ == "__main__":
+    si = Structure(Lattice.cubic(5.43), ["Si"] * 2, [[0, 0, 0], [0.25, 0.25, 0.25]])
 
-mset = MatPESStaticSet(
-    si,
-    user_incar_settings=incar_overrides,
-    user_kpoints_settings=Kpoints.gamma_automatic((1, 1, 1)),
-)
-mset.write_input("example_nvt")
+    mset = MatPESStaticSet(
+        si,
+        user_incar_settings=incar_overrides,
+        user_kpoints_settings=Kpoints.gamma_automatic((1, 1, 1)),
+    )
+    mset.write_input("example_nvt")

@@ -34,3 +34,4 @@ ncsd_screening/*.out
 our_trajectories/sp_validation/runs/
 our_trajectories/example_nvt/
 our_trajectories/sp_validation/logs/
+our_trajectories/runs/
