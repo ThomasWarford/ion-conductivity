@@ -27,3 +27,10 @@ ncsd_screening/results/*.html
 ncsd_screening/results/screen.csv
 ncsd_screening/*.log
 ncsd_screening/*.out
+
+# VASP run scratch (INCAR/POSCAR/etc regenerate from the prep scripts;
+# WAVECAR/CHGCAR/AECCAR/vasprun.xml etc. are large and not reproducible-free
+# but also not worth keeping)
+our_trajectories/sp_validation/runs/
+our_trajectories/example_nvt/
+our_trajectories/sp_validation/logs/

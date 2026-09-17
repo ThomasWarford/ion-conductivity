@@ -13,37 +13,32 @@
 #
 # Cells are 80-108 atoms, so the set is roughly uniform in cost.
 
-# --- chemical-trend series -------------------------------------------------
-# Each pair keeps every element but one and swaps that one for a same-group (or
-# same-oxidation-state) congener at the SAME stoichiometry, so the substitution
-# is the only thing that changes.  Run both members or neither.
+# --- spin-polarization screen (2026-09-16) ----------------------------------
+# ISPIN=1 vs 2 single points found real moments (localized defects, e.g. N-N
+# dimers in Li-N; W4+ d2 vs Ti4+ d0 in Li-O-P-W) in 5/17 systems, with force
+# deltas 0.16-0.54 eV/A. Dropped to keep ISPIN=1 uniform: Li-N, Al-K-Li-P,
+# As-F-Li, Li-O-P-W, Li-Nb-S. Breaks 4 of the 6 trend pairs below.
 
-# 1. group-15 binary, N -> P            Li3N / Li3P          (both converge)
-Li-N
+# --- chemical-trend series -------------------------------------------------
+# Same-stoichiometry, one-element swapped. Pair intact unless noted.
+
+# 1. N -> P (Li3N/Li3P): Li-N dropped, Li-P standalone.
 Li-P
 
-# 2. alkali counter-ion, Na -> K        Na2LiAlP2 / K2LiAlP2
+# 2. Na -> K alkali: Al-K-Li-P dropped, Al-Li-Na-P standalone.
 Al-Li-Na-P
-Al-K-Li-P
 
-# 3. chalcogen, S -> Se                 RbLiS / RbLiSe
+# 3. S -> Se chalcogen: intact.
 Li-Rb-S
 Li-Rb-Se
 
-# 4. group-15 hexafluoride, P -> As     LiPF6 / LiAsF6
-#    LiPF6 is the commercial Li-ion salt.  Neither member converges on the
-#    existing ~30 ps runs (cv 0.36/0.41, conv@0T) -- they need the extended AIMD.
+# 4. P -> As (LiPF6/LiAsF6): As-F-Li dropped, F-Li-P standalone.
 F-Li-P
-As-F-Li
 
-# 5. NASICON framework, W -> Ti         LiP3W2O12 / LiTi2P3O12
-#    LiTi2(PO4)3 is the LATP parent.  Same caveat as series 4: conv@0T both.
-Li-O-P-W
+# 5. W -> Ti (NASICON): Li-O-P-W dropped, Li-O-P-Ti standalone.
 Li-O-P-Ti
 
-# 6. group-15 thio-salt, Sb -> Bi       Li5SbS4 / Li3BiS3
-#    Stoichiometry differs (Li fraction 0.50 vs 0.43), but these are the only
-#    two systems besides Li3N/Li3P where BOTH members reach conv@3T.
+# 6. Sb -> Bi thio-salt: intact.
 Li-S-Sb
 Bi-Li-S
 
@@ -68,7 +63,8 @@ Li-O-Zr
 # (D_Li = 8.8e-5 cm2/s at 1000 K, ahead of LiCl) and the smallest cell at 80
 # atoms.  Erratic on the existing runs: it fails a different convergence test at
 # each temperature, so it is here on magnitude and needs the longer trajectories.
-Li-Nb-S
+# DROPPED 2026-09-16: spin-polarized (Nb carries a real 0.83 uB moment).
+#Li-Nb-S
 
 # Li6SnGe2 -- CONTROL, not an electrolyte.  Balanced only through Zintl anions
 # (Li+ / Ge4- / Sn2+) and metallic; it is the single best-converging system in
