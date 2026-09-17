@@ -17,7 +17,8 @@
 # ISPIN=1 vs 2 single points found real moments (localized defects, e.g. N-N
 # dimers in Li-N; W4+ d2 vs Ti4+ d0 in Li-O-P-W) in 5/17 systems, with force
 # deltas 0.16-0.54 eV/A. Dropped to keep ISPIN=1 uniform: Li-N, Al-K-Li-P,
-# As-F-Li, Li-O-P-W, Li-Nb-S. Breaks 4 of the 6 trend pairs below.
+# As-F-Li, Li-O-P-W. Breaks 4 of the 6 trend pairs below. Li-Nb-S is also
+# spin-polarized but kept (see standalone section) -- run it with ISPIN=2.
 
 # --- chemical-trend series -------------------------------------------------
 # Same-stoichiometry, one-element swapped. Pair intact unless noted.
@@ -63,8 +64,10 @@ Li-O-Zr
 # (D_Li = 8.8e-5 cm2/s at 1000 K, ahead of LiCl) and the smallest cell at 80
 # atoms.  Erratic on the existing runs: it fails a different convergence test at
 # each temperature, so it is here on magnitude and needs the longer trajectories.
-# DROPPED 2026-09-16: spin-polarized (Nb carries a real 0.83 uB moment).
-#Li-Nb-S
+# Spin-polarized (Nb carries a real 0.83 uB moment) -- kept anyway as a
+# distinct high-mobility regime with no stoichiometric partner in this list.
+# NEEDS ISPIN=2, unlike every other system here.
+Li-Nb-S
 
 # Li6SnGe2 -- CONTROL, not an electrolyte.  Balanced only through Zintl anions
 # (Li+ / Ge4- / Sn2+) and metallic; it is the single best-converging system in
