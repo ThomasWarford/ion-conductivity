@@ -6,7 +6,7 @@ segment -- EOS volume-scan runs, iterative equilibration, and production; see
 segment_labels.py), and take N evenly-spaced samples across that full frame pool.
 Each sample becomes a single-point (NSW=0) VASP input directory at:
 
-    our_trajectories/chargemol_runs/<compound>/<temp>K/seg<NN>-<label>/f<frame_idx>/
+    our_trajectories/our_singlepoints/<compound>/<temp>K/seg<NN>-<label>/f<frame_idx>/
 
 using the exact recipe in nvt_md_input.py (MatPESStaticSet + incar_overrides),
 minus the MD-only tags, plus LAECHG/LCHARG for chargemol. The directory path plus
@@ -33,7 +33,7 @@ from segment_labels import load_frame_pool
 
 HERE = Path(__file__).resolve().parent
 DATA = HERE.parent / "data_ncsd" / "trajectories"
-OUT = HERE / "chargemol_runs"
+OUT = HERE / "our_singlepoints"
 
 TEMPS = (1000, 1500, 2000, 2500)
 N_PER_TEMP_DEFAULT = 750  # 3000/compound across the 4 temperatures
