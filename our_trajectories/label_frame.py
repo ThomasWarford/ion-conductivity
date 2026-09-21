@@ -4,12 +4,13 @@ an extended-xyz file, then clean up.
 
 Labeling (`build_atoms`): merges three sources into one ASE `Atoms` object --
 `vasprun.xml` (energy/forces/stress/Fermi level), the live `ChargemolAnalysis`
-object (DDEC6 charges/spin moments/bond orders/moments/dipoles), and a static
-per-compound formal-oxidation-state lookup (`formal_charges.py`). All fields
-are prefixed `REF_` (training targets); see `formal_charges.py` for the
-oxidation-state rationale. Atom order across all three sources is asserted to
-match before anything is attached -- see the comment on `build_atoms` for why
-that's not something pymatgen itself checks.
+object (DDEC6 charges/spin moments/bond orders/dipoles -- not the r-moments,
+unused by MACE-SCF, though the raw `ddec/` output files with those are still
+kept on disk), and a static per-compound formal-oxidation-state lookup
+(`formal_charges.py`). All fields are prefixed `REF_` (training targets); see
+`formal_charges.py` for the oxidation-state rationale. Atom order across all
+three sources is asserted to match before anything is attached -- see the
+comment on `build_atoms` for why that's not something pymatgen itself checks.
 
 Cleanup: on success, delete AECCAR0 and CHG (AECCAR0 is redundant once DDEC
 charges exist; CHG is VASP's non-augmented pseudo density, redundant with
@@ -123,6 +124,7 @@ def build_atoms(case_dir: Path, chargemol: ChargemolAnalysis, compound: str) -> 
     forces = atoms.get_forces()
     stress = atoms.get_stress()
     efermi, efermi_plus_alpha_bet = parse_fermi_level(case_dir / "OUTCAR")
+    config_type = atoms.calc.parameters["system"]  # INCAR SYSTEM tag, echoed into vasprun.xml
 
     atoms.calc = None  # drop vasprun.xml's own energy/forces/stress -- REF_* below replace them
 
@@ -130,9 +132,6 @@ def build_atoms(case_dir: Path, chargemol: ChargemolAnalysis, compound: str) -> 
     atoms.arrays["REF_ddec6_charges"] = ddec_charges
     atoms.arrays["REF_ddec6_spin_moments"] = as_array(chargemol.ddec_spin_moments)
     atoms.arrays["REF_ddec6_bond_order_sums"] = as_array(chargemol.bond_order_sums)
-    atoms.arrays["REF_ddec6_rsquared_moments"] = as_array(chargemol.ddec_rsquared_moments)
-    atoms.arrays["REF_ddec6_rcubed_moments"] = as_array(chargemol.ddec_rcubed_moments)
-    atoms.arrays["REF_ddec6_rfourth_moments"] = as_array(chargemol.ddec_rfourth_moments)
     atoms.arrays["REF_ddec6_dipoles"] = ddec_dipoles
     atoms.arrays["REF_formal_charges"] = np.array(
         [FORMAL_CHARGES[compound][sym] for sym in chargemol_symbols], dtype=float
@@ -148,6 +147,11 @@ def build_atoms(case_dir: Path, chargemol: ChargemolAnalysis, compound: str) -> 
     atoms.info["REF_total_charge"] = 0.0
     atoms.info["REF_vasp_fermi_level"] = efermi
     atoms.info["REF_vasp_fermi_level_plus_alpha_bet"] = efermi_plus_alpha_bet
+
+    # not a training target (no REF_ prefix) -- a grouping/weighting tag for
+    # fitting frameworks, reusing the SYSTEM tag already written by
+    # build_chargemol_frames.py (compound_temp_seg-label_frame).
+    atoms.info["config_type"] = config_type
 
     return atoms
 
