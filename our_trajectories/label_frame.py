@@ -74,6 +74,7 @@ def process(case_dir: Path) -> bool:
             atomic_densities_path=ATOMIC_DENSITIES,
             extra_info=extra_info,
             extra_arrays=extra_arrays,
+            compress_log_path=case_dir / "voltools.log",
             delete_originals=True,
         )
     except Exception:
