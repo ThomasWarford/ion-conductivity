@@ -14,7 +14,9 @@ comment on `build_atoms` for why that's not something pymatgen itself checks.
 
 Cleanup: on success, delete AECCAR0 and CHG (AECCAR0 is redundant once DDEC
 charges exist; CHG is VASP's non-augmented pseudo density, redundant with
-CHGCAR), lossily compress the remaining volumetric files (CHGCAR/AECCAR1/
+CHGCAR), plus POTCAR/REPORT/WAVECAR/XDATCAR/IBZKPT/CONTCAR (run bookkeeping/
+restart files with nothing training needs, now that vasprun.xml and atoms.xyz
+exist), lossily compress the remaining volumetric files (CHGCAR/AECCAR1/
 AECCAR2) to zfp-compressed .h5 via `voltools compress --delete-originals` (see
 ../../volumetric-tools; verified error is far below DFT/AIMD noise, see
 compression_test/RESULTS.md and volumetric-tools/benchmarks/vasp.md), and mark
@@ -179,7 +181,16 @@ def process(case_dir: Path) -> bool:
 
     ase_write(case_dir / "atoms.xyz", atoms)
 
-    for name in ("AECCAR0", "CHG"):
+    for name in (
+        "AECCAR0",
+        "CHG",
+        "POTCAR",
+        "REPORT",
+        "WAVECAR",
+        "XDATCAR",
+        "IBZKPT",
+        "CONTCAR",
+    ):
         f = case_dir / name
         if f.exists():
             f.unlink()
