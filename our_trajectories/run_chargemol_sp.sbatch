@@ -13,9 +13,10 @@
 
 # Charge-partitioning single points: one array task processes a whole batch of
 # case directories (from build_chargemol_frames.py) sequentially -- each case is
-# a single-point VASP run (NSW=0, LAECHG/LCHARG on) followed by chargemol/DDEC6
-# (run_chargemol.py), which lossily compresses CHGCAR/AECCAR1/AECCAR2 via voltools
-# and gzips the rest of the case dir when done. Same node/MPI layout as
+# a single-point VASP run (NSW=0, LAECHG/LCHARG on) followed by chargemol/DDEC6,
+# DFT+DDEC6 training-frame labeling, and cleanup (label_frame.py), which lossily
+# compresses CHGCAR/AECCAR1/AECCAR2 via voltools and gzips the rest of the case
+# dir when done. Same node/MPI layout as
 # run_aimd.sbatch (vasp_gam, Intel build, 64 ranks/node, NCORE=32) since it's the
 # same ~100-atom Gamma-only cell size; --time/--partition are single-point-scale,
 # not the 7-day AIMD scale, and will be retuned from the pilot's measured
@@ -46,6 +47,6 @@ for CASE in "${CASES[@]}"; do
     srun --mpi=pmi2 --cpu-bind=cores -n "$SLURM_NTASKS" vasp_gam > vasp.out 2>&1
     tail -n 3 OSZICAR
   )
-  OMP_NUM_THREADS=64 conda run -p ~/.conda-envs/dft python our_trajectories/run_chargemol.py "$CASE_PATH"
+  OMP_NUM_THREADS=64 conda run -p ~/.conda-envs/dft python our_trajectories/label_frame.py "$CASE_PATH"
 done
 echo "done task $SLURM_ARRAY_TASK_ID ($(date))"
