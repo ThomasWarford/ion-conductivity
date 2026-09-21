@@ -32,3 +32,9 @@ FORMAL_CHARGES: dict[str, dict[str, int]] = {
     "Li-Nb-S": {"Li": 1, "Nb": 5, "S": -2},
     "Ge-Li-Sn": {"Ge": -2, "Li": 1, "Sn": -2},
 }
+
+
+def formal_charges_for(compound: str) -> dict[str, int]:
+    """Indirection point so a future automatic oxidation-state guesser
+    replaces one function, not every call site."""
+    return FORMAL_CHARGES[compound]
