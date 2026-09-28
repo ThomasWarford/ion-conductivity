@@ -36,3 +36,13 @@ our_trajectories/example_nvt/
 our_trajectories/sp_validation/logs/
 our_trajectories/runs/
 our_trajectories/our_singlepoints/
+
+# large data / vendored trees that showed up as untracked during the
+# chargemol production run (Sep 2026)
+our_trajectories/pilot_archive/
+papers/
+compression_test/bench/
+compression_test/samples/
+compression_test/bench_frame2/
+compression_test/tools/fpzip/
+compression_test/tools/den2bin/
