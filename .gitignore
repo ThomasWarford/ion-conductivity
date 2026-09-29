@@ -46,3 +46,8 @@ compression_test/samples/
 compression_test/bench_frame2/
 compression_test/tools/fpzip/
 compression_test/tools/den2bin/
+
+# MLIP train/valid/test extxyz (regenerate with our_trajectories/make_splits.py;
+# manifest.csv and split_info.json are tracked)
+our_trajectories/splits/*.xyz.gz
+our_trajectories/splits/*.tmp

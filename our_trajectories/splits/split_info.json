@@ -1,0 +1,273 @@
+{
+  "root": "/home/twarford/ion-conductivity/our_trajectories/our_singlepoints",
+  "seed": 0,
+  "test_frac_per_segment": 0.05,
+  "valid_frac_per_group": 0.05,
+  "counts": {
+    "train": 35077,
+    "valid": 1976,
+    "test": 1947
+  },
+  "per_group": {
+    "Al-Li-Na-P_1000K": {
+      "train": 674,
+      "valid": 38,
+      "test": 38
+    },
+    "Al-Li-Na-P_1500K": {
+      "train": 673,
+      "valid": 38,
+      "test": 39
+    },
+    "Al-Li-Na-P_2000K": {
+      "train": 676,
+      "valid": 38,
+      "test": 36
+    },
+    "Al-Li-Na-P_2500K": {
+      "train": 673,
+      "valid": 38,
+      "test": 39
+    },
+    "Bi-Li-S_1000K": {
+      "train": 671,
+      "valid": 38,
+      "test": 41
+    },
+    "Bi-Li-S_1500K": {
+      "train": 674,
+      "valid": 38,
+      "test": 38
+    },
+    "Bi-Li-S_2000K": {
+      "train": 673,
+      "valid": 38,
+      "test": 39
+    },
+    "Bi-Li-S_2500K": {
+      "train": 678,
+      "valid": 38,
+      "test": 34
+    },
+    "Cl-Li_1000K": {
+      "train": 674,
+      "valid": 38,
+      "test": 38
+    },
+    "Cl-Li_1500K": {
+      "train": 675,
+      "valid": 38,
+      "test": 37
+    },
+    "Cl-Li_2000K": {
+      "train": 672,
+      "valid": 38,
+      "test": 40
+    },
+    "Cl-Li_2500K": {
+      "train": 674,
+      "valid": 38,
+      "test": 38
+    },
+    "Cu-Li-S_1000K": {
+      "train": 674,
+      "valid": 38,
+      "test": 38
+    },
+    "Cu-Li-S_1500K": {
+      "train": 673,
+      "valid": 38,
+      "test": 39
+    },
+    "Cu-Li-S_2000K": {
+      "train": 676,
+      "valid": 38,
+      "test": 36
+    },
+    "Cu-Li-S_2500K": {
+      "train": 675,
+      "valid": 38,
+      "test": 37
+    },
+    "F-Li-P_1000K": {
+      "train": 672,
+      "valid": 38,
+      "test": 40
+    },
+    "F-Li-P_1500K": {
+      "train": 678,
+      "valid": 38,
+      "test": 34
+    },
+    "F-Li-P_2000K": {
+      "train": 672,
+      "valid": 38,
+      "test": 40
+    },
+    "F-Li-P_2500K": {
+      "train": 677,
+      "valid": 38,
+      "test": 35
+    },
+    "Ge-Li-Sn_1000K": {
+      "train": 673,
+      "valid": 38,
+      "test": 39
+    },
+    "Ge-Li-Sn_1500K": {
+      "train": 674,
+      "valid": 38,
+      "test": 38
+    },
+    "Ge-Li-Sn_2000K": {
+      "train": 674,
+      "valid": 38,
+      "test": 38
+    },
+    "Ge-Li-Sn_2500K": {
+      "train": 674,
+      "valid": 38,
+      "test": 38
+    },
+    "Li-Nb-S_1000K": {
+      "train": 674,
+      "valid": 38,
+      "test": 38
+    },
+    "Li-Nb-S_1500K": {
+      "train": 678,
+      "valid": 38,
+      "test": 34
+    },
+    "Li-Nb-S_2000K": {
+      "train": 677,
+      "valid": 38,
+      "test": 35
+    },
+    "Li-Nb-S_2500K": {
+      "train": 675,
+      "valid": 38,
+      "test": 37
+    },
+    "Li-O-P-Ti_1000K": {
+      "train": 674,
+      "valid": 38,
+      "test": 38
+    },
+    "Li-O-P-Ti_1500K": {
+      "train": 672,
+      "valid": 38,
+      "test": 40
+    },
+    "Li-O-P-Ti_2000K": {
+      "train": 676,
+      "valid": 38,
+      "test": 36
+    },
+    "Li-O-P-Ti_2500K": {
+      "train": 674,
+      "valid": 38,
+      "test": 38
+    },
+    "Li-O-Zr_1000K": {
+      "train": 674,
+      "valid": 38,
+      "test": 38
+    },
+    "Li-O-Zr_1500K": {
+      "train": 675,
+      "valid": 38,
+      "test": 37
+    },
+    "Li-O-Zr_2000K": {
+      "train": 673,
+      "valid": 38,
+      "test": 39
+    },
+    "Li-O-Zr_2500K": {
+      "train": 673,
+      "valid": 38,
+      "test": 39
+    },
+    "Li-P_1000K": {
+      "train": 673,
+      "valid": 38,
+      "test": 39
+    },
+    "Li-P_1500K": {
+      "train": 675,
+      "valid": 38,
+      "test": 37
+    },
+    "Li-P_2000K": {
+      "train": 678,
+      "valid": 38,
+      "test": 34
+    },
+    "Li-P_2500K": {
+      "train": 678,
+      "valid": 38,
+      "test": 34
+    },
+    "Li-Rb-S_1000K": {
+      "train": 674,
+      "valid": 38,
+      "test": 38
+    },
+    "Li-Rb-S_1500K": {
+      "train": 676,
+      "valid": 38,
+      "test": 36
+    },
+    "Li-Rb-S_2000K": {
+      "train": 677,
+      "valid": 38,
+      "test": 35
+    },
+    "Li-Rb-S_2500K": {
+      "train": 676,
+      "valid": 38,
+      "test": 36
+    },
+    "Li-Rb-Se_1000K": {
+      "train": 680,
+      "valid": 38,
+      "test": 32
+    },
+    "Li-Rb-Se_1500K": {
+      "train": 678,
+      "valid": 38,
+      "test": 34
+    },
+    "Li-Rb-Se_2000K": {
+      "train": 676,
+      "valid": 38,
+      "test": 36
+    },
+    "Li-Rb-Se_2500K": {
+      "train": 675,
+      "valid": 38,
+      "test": 37
+    },
+    "Li-S-Sb_1000K": {
+      "train": 671,
+      "valid": 38,
+      "test": 41
+    },
+    "Li-S-Sb_1500K": {
+      "train": 671,
+      "valid": 38,
+      "test": 41
+    },
+    "Li-S-Sb_2000K": {
+      "train": 673,
+      "valid": 38,
+      "test": 39
+    },
+    "Li-S-Sb_2500K": {
+      "train": 672,
+      "valid": 38,
+      "test": 40
+    }
+  }
+}
