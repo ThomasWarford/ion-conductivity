@@ -1,0 +1,4 @@
+isolated_atoms/ispin1/L21/Na
+isolated_atoms/ispin1/L21/Rb
+isolated_atoms/ispin1/L21/Cl
+isolated_atoms/ispin1/L21/O
